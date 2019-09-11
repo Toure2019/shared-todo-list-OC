@@ -1,0 +1,12 @@
+{
+	"name": "Todolist partagée en temps réel",
+	"version": "0.2.0",
+	"dependencies": {
+		"ejs": "^2.7.1",
+		"ent": "^2.2.0",
+		"express": "^4.17.1",
+		"socket.io": "^2.2.0"
+	},
+	"author": "Youssouf TOURE",
+	"description": "Un gestionnaire de todolist en temps réel avec socket.io"
+}

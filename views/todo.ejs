@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <title>Shared Todolist</title>
+    </head>
+
+    <body>
+        <h1>Todolist partagée en temps réel !</h1>
+            
+        <!-- Affichage de la todolist -->
+        <ul>
+            <div id="todos"></div>
+        </ul>
+
+
+        <form action="/todo/ajouter/" method="post" id="todoForm">
+            <p>
+                <label for="newTodo">Que dois-je faire ?</label>
+                <input type="text" name="newTodo" id="newTodo" autofocus />
+                <input type="submit" />
+            </p>
+        </form>
+
+        <div id="content"></div>
+
+
+        <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+        <script src="/socket.io/socket.io.js"></script>
+
+        <script>
+            var socket = io('http://localhost:8080');
+            var pseudo = prompt('Entrez votre pseudo : ');
+
+            /**  
+            * Evènement emit par l'utilisateur
+            **/
+
+            // L'utilisateur se connecte
+            socket.emit('newuser', pseudo); 
+
+            // Un utilisateur ajoute un todo
+            $('#todoForm').submit(function(event){
+                event.preventDefault();
+
+                var newTodo = $('#newTodo').val();
+                socket.emit('newtodo', newTodo);
+                $('#newTodo').val('').focus(); 
+            });
+
+
+            /**  
+            * Evènement emit par l'utilisateur
+            **/
+
+            // Un utilisateur vient de rejoindre le groupe
+            socket.on('newuser', function(pseudo){
+                $('#content').prepend('<p><em>' + pseudo + '</em> : vient de se connecter !</p>');
+            });
+
+            // Une fois connecté : Recupération de la todolist envoyée par la serveur
+            socket.on('showtodos', function(todos){
+                displayTodos(todos);
+            });  
+
+            // Après ajout d'un nouveau todo : Recupération de la nouvelle todolist envoyée par la serveur
+            socket.on('newtodo', function(todos){ 
+                displayTodos(todos);
+            });
+
+            // Après suppression d'un todo : Recupération de la nouvelle todolist envoyée par la serveur
+            socket.on('deltodo', function(todos){
+                displayTodos(todos);
+            });
+
+            function displayTodos(todos){
+                $('#todos').html('');
+                todos.forEach(function(todo, index){
+                    $('#todos').append('<li><input class="delTodo" type="button" id="' + index + '" value="✘" > ' + todo + '</li>');
+                });
+
+                // La todolist n'était pas là au chargement de la page. donc JQuery n'arrive pas à reconnaître les évènement. d'où l'ajout à chaque raffraîchissement
+                $('.delTodo').click(function() {
+                    var index = $(this).attr('id');
+
+                    // Envoi de l'index au serveur pour la suppression du todo
+                    socket.emit('deltodo', index);
+                });
+            }
+
+        </script>
+
+    </body>
+</html>
